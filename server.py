@@ -35,8 +35,8 @@ state = {
 def index():
     return render_template("index.html")
 
-@app.route("/set_mode/<mode>")
-def set_mode(mode):
+@app.route("/set_exercise/<mode>")
+def set_exercise(mode):
     data = request.get_json(force = True)
     if mode in EXERCISE_MAP:
         with lock:

@@ -1,0 +1,531 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>RepCounterDX</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<style>
+  :root {
+    --bg: #0a0a0a;
+    --panel: #111;
+    --border: #222;
+    --accent: #c8f135;
+    --red: #ff3b3b;
+    --dim: #555;
+    --text: #e8e8e8;
+  }
+
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+  }
+
+  header {
+    height: 52px;
+    background: var(--panel);
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 0 1.5rem;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+    letter-spacing: 0.1em;
+    color: var(--accent);
+  }
+
+  .logo span { color: var(--dim); }
+
+  .live-indicator {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+    color: var(--dim);
+  }
+
+  .dot {
+    width: 7px; height: 7px;
+    border-radius: 50%;
+    background: var(--dim);
+    transition: background 0.3s;
+  }
+
+  .dot.active {
+    background: var(--accent);
+    animation: blink 1.4s infinite;
+  }
+
+  @keyframes blink {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.2; }
+  }
+
+  main {
+    display: grid;
+    grid-template-columns: 1fr 280px;
+    flex: 1;
+  }
+
+  /* Video side */
+  .video-panel {
+    position: relative;
+    background: #000;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid var(--border);
+    overflow: hidden;
+  }
+
+  #output-canvas {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+  }
+
+  #webcam { display: none; }
+  #capture-canvas { display: none; }
+
+  .placeholder {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 12px;
+    color: var(--dim);
+    font-size: 0.7rem;
+    letter-spacing: 0.12em;
+  }
+
+  .placeholder svg { opacity: 0.15; }
+
+  /* Corner brackets */
+  .bracket {
+    position: absolute;
+    width: 28px; height: 28px;
+    pointer-events: none;
+    opacity: 0.35;
+  }
+  .bracket.tl { top: 14px; left: 14px;
+    border-top: 2px solid var(--accent);
+    border-left: 2px solid var(--accent); }
+  .bracket.tr { top: 14px; right: 14px;
+    border-top: 2px solid var(--accent);
+    border-right: 2px solid var(--accent); }
+  .bracket.bl { bottom: 14px; left: 14px;
+    border-bottom: 2px solid var(--accent);
+    border-left: 2px solid var(--accent); }
+  .bracket.br { bottom: 14px; right: 14px;
+    border-bottom: 2px solid var(--accent);
+    border-right: 2px solid var(--accent); }
+
+  .stage-pill {
+    position: absolute;
+    bottom: 14px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: rgba(0,0,0,0.7);
+    border: 1px solid var(--border);
+    padding: 3px 18px;
+    font-size: 0.65rem;
+    letter-spacing: 0.15em;
+    color: var(--accent);
+    pointer-events: none;
+  }
+
+  /* Sidebar */
+  aside {
+    background: var(--panel);
+    display: flex;
+    flex-direction: column;
+    overflow-y: auto;
+  }
+
+  .block {
+    padding: 1.25rem;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .block-label {
+    font-size: 0.58rem;
+    letter-spacing: 0.18em;
+    color: var(--dim);
+    margin-bottom: 1rem;
+    text-transform: uppercase;
+  }
+
+  /* Rep counter */
+  .rep-wrap { text-align: center; padding: 0.5rem 0; }
+
+  .rep-num {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 6.5rem;
+    line-height: 1;
+    color: var(--accent);
+    transition: transform 0.08s;
+  }
+
+  .rep-num.pop { transform: scale(1.18); }
+
+  .rep-sub {
+    font-size: 0.6rem;
+    letter-spacing: 0.2em;
+    color: var(--dim);
+    margin-top: 4px;
+  }
+
+  .stage-line {
+    font-size: 0.75rem;
+    letter-spacing: 0.1em;
+    color: var(--text);
+    text-align: center;
+    margin-top: 8px;
+    min-height: 1.1em;
+  }
+
+  /* Exercise buttons */
+  .ex-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+
+  .ex-btn {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    color: var(--dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.08em;
+    padding: 10px 6px;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: border-color 0.15s, color 0.15s;
+    text-align: center;
+  }
+
+  .ex-btn:hover { border-color: var(--accent); color: var(--text); }
+
+  .ex-btn.active {
+    border-color: var(--accent);
+    color: var(--accent);
+    background: rgba(200,241,53,0.04);
+  }
+
+  .ex-btn .shortcut {
+    display: block;
+    font-size: 0.5rem;
+    color: var(--dim);
+    margin-top: 3px;
+  }
+
+  /* Control buttons */
+  .ctrl {
+    width: 100%;
+    padding: 9px;
+    margin-bottom: 7px;
+    background: transparent;
+    border: 1px solid var(--border);
+    color: var(--dim);
+    font-family: 'DM Mono', monospace;
+    font-size: 0.65rem;
+    letter-spacing: 0.1em;
+    cursor: pointer;
+    text-transform: uppercase;
+    transition: border-color 0.15s, color 0.15s;
+  }
+
+  .ctrl:last-child { margin-bottom: 0; }
+  .ctrl:hover { border-color: var(--accent); color: var(--accent); }
+  .ctrl.go { border-color: var(--accent); color: var(--accent); }
+  .ctrl.go:hover { background: rgba(200,241,53,0.06); }
+
+  /* Metrics */
+  .metrics {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 7px;
+  }
+
+  .metric {
+    background: var(--bg);
+    border: 1px solid var(--border);
+    padding: 10px;
+    text-align: center;
+  }
+
+  .metric-val {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 1.5rem;
+  }
+
+  .metric-label {
+    font-size: 0.52rem;
+    letter-spacing: 0.1em;
+    color: var(--dim);
+    margin-top: 2px;
+  }
+
+  footer {
+    padding: 0.6rem 1.5rem;
+    border-top: 1px solid var(--border);
+    font-size: 0.58rem;
+    color: var(--dim);
+    letter-spacing: 0.08em;
+    display: flex;
+    justify-content: space-between;
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="logo">Rep<span>Counter</span>DX</div>
+  <div class="live-indicator">
+    <div class="dot" id="dot"></div>
+    <span id="status">OFFLINE</span>
+  </div>
+</header>
+
+<main>
+  <div class="video-panel">
+    <video id="webcam" autoplay playsinline muted></video>
+    <canvas id="output-canvas"></canvas>
+    <canvas id="capture-canvas"></canvas>
+
+    <div class="placeholder" id="placeholder">
+      <svg width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
+        <path d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.89L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+      </svg>
+      <span>CLICK START CAMERA TO BEGIN</span>
+    </div>
+
+    <div class="bracket tl"></div>
+    <div class="bracket tr"></div>
+    <div class="bracket bl"></div>
+    <div class="bracket br"></div>
+    <div class="stage-pill" id="stage-pill">STANDBY</div>
+  </div>
+
+  <aside>
+    <div class="block">
+      <div class="block-label">Repetitions</div>
+      <div class="rep-wrap">
+        <div class="rep-num" id="rep-num">0</div>
+        <div class="rep-sub">REPS</div>
+        <div class="stage-line" id="stage-line">—</div>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Exercise</div>
+      <div class="ex-grid">
+        <button class="ex-btn active" data-mode="curl" onclick="setExercise('curl')">
+          Bicep Curl <span class="shortcut">[C]</span>
+        </button>
+        <button class="ex-btn" data-mode="squat" onclick="setExercise('squat')">
+          Squat <span class="shortcut">[S]</span>
+        </button>
+        <button class="ex-btn" data-mode="lateral" onclick="setExercise('lateral')">
+          Lateral Raise <span class="shortcut">[L]</span>
+        </button>
+        <button class="ex-btn" data-mode="press" onclick="setExercise('press')">
+          Shoulder Press <span class="shortcut">[P]</span>
+        </button>
+      </div>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Controls</div>
+      <button class="ctrl go" id="cam-btn" onclick="toggleCamera()">▶ START CAMERA</button>
+      <button class="ctrl" onclick="resetReps()">↺ RESET REPS</button>
+    </div>
+
+    <div class="block">
+      <div class="block-label">Performance</div>
+      <div class="metrics">
+        <div class="metric">
+          <div class="metric-val" id="fps">—</div>
+          <div class="metric-label">FPS</div>
+        </div>
+        <div class="metric">
+          <div class="metric-val" id="lat">—</div>
+          <div class="metric-label">MS</div>
+        </div>
+      </div>
+    </div>
+  </aside>
+</main>
+
+<footer>
+  <span>REPCOUNTERDX · YOLOV8 POSE · FLASK</span>
+  <span id="mode-footer">MODE: CURL</span>
+</footer>
+
+<script>
+  const webcam   = document.getElementById("webcam");
+  const outCanvas= document.getElementById("output-canvas");
+  const capCanvas= document.getElementById("capture-canvas");
+  const ctxOut   = outCanvas.getContext("2d");
+  const ctxCap   = capCanvas.getContext("2d");
+
+  let streaming  = false;
+  let busy       = false;
+  let frameCount = 0;
+  let lastFps    = performance.now();
+  let prevReps   = 0;
+
+  async function toggleCamera() {
+    streaming ? stopCamera() : await startCamera();
+  }
+
+  async function startCamera() {
+    try {
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
+        audio: false
+      });
+      webcam.srcObject = stream;
+      await new Promise(r => webcam.onloadedmetadata = r);
+
+      outCanvas.width  = webcam.videoWidth;
+      outCanvas.height = webcam.videoHeight;
+      capCanvas.width  = webcam.videoWidth;
+      capCanvas.height = webcam.videoHeight;
+
+      streaming = true;
+      document.getElementById("placeholder").style.display = "none";
+      document.getElementById("dot").classList.add("active");
+      document.getElementById("status").textContent = "LIVE";
+      document.getElementById("cam-btn").textContent = "■ STOP CAMERA";
+
+      loop();
+    } catch(e) {
+      alert("Camera access denied or unavailable.");
+    }
+  }
+
+  function stopCamera() {
+    streaming = false;
+    webcam.srcObject?.getTracks().forEach(t => t.stop());
+    webcam.srcObject = null;
+    ctxOut.clearRect(0, 0, outCanvas.width, outCanvas.height);
+    document.getElementById("placeholder").style.display = "flex";
+    document.getElementById("dot").classList.remove("active");
+    document.getElementById("status").textContent = "OFFLINE";
+    document.getElementById("cam-btn").textContent = "▶ START CAMERA";
+  }
+
+  async function loop() {
+    if (!streaming) return;
+    if (!busy) {
+      busy = true;
+      const t0 = performance.now();
+
+      ctxCap.drawImage(webcam, 0, 0);
+      const b64 = capCanvas.toDataURL("image/jpeg", 0.5).split(",")[1];
+
+      try {
+        const res  = await fetch("/process", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ frame: b64 })
+        });
+        const data = await res.json();
+
+        // Draw annotated frame
+        const img = new Image();
+        img.onload = () => ctxOut.drawImage(img, 0, 0, outCanvas.width, outCanvas.height);
+        img.src = "data:image/jpeg;base64," + data.frame;
+
+        // Update UI
+        updateStats(data.count, data.stage, data.mode);
+
+        // FPS + latency
+        const lat = Math.round(performance.now() - t0);
+        document.getElementById("lat").textContent = lat;
+        frameCount++;
+        const now = performance.now();
+        if (now - lastFps >= 1000) {
+          document.getElementById("fps").textContent = frameCount;
+          frameCount = 0;
+          lastFps = now;
+        }
+      } catch(e) {
+        console.error(e);
+      }
+
+      busy = false;
+    }
+    requestAnimationFrame(loop);
+  }
+
+  function updateStats(count, stage, mode) {
+    const repEl = document.getElementById("rep-num");
+
+    // Pop animation on new rep
+    if (count !== prevReps) {
+      repEl.classList.add("pop");
+      setTimeout(() => repEl.classList.remove("pop"), 120);
+      prevReps = count;
+    }
+
+    repEl.textContent = count;
+    document.getElementById("stage-line").textContent = stage || "—";
+    document.getElementById("stage-pill").textContent = stage || "—";
+    document.getElementById("mode-footer").textContent = "MODE: " + mode.toUpperCase();
+  }
+
+  async function setExercise(mode) {
+    await fetch("/set_exercise", {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ mode })
+    });
+    document.querySelectorAll(".ex-btn").forEach(b => {
+      b.classList.toggle("active", b.dataset.mode === mode);
+    });
+    prevReps = 0;
+  }
+
+  async function resetReps() {
+    await fetch("/reset", { method: "POST" });
+    prevReps = 0;
+    document.getElementById("rep-num").textContent = "0";
+    document.getElementById("stage-line").textContent = "—";
+  }
+
+  // Keyboard shortcuts
+  document.addEventListener("keydown", e => {
+    const map = { c: "curl", s: "squat", l: "lateral", p: "press" };
+    if (map[e.key]) setExercise(map[e.key]);
+    if (e.key === "q") stopCamera();
+  });
+</script>
+</body>
+</html>
+```
+
+---
+
+## `requirements.txt`
+```
+flask
+flask-cors
+ultralytics
+opencv-python
+numpy
