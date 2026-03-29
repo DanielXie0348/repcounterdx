@@ -2,530 +2,876 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-<title>RepCounterDX</title>
-<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<meta name="apple-mobile-web-app-title" content="RepAI"/>
+<meta name="theme-color" content="#f7f5f0"/>
+<title>RepAI</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link href="https://fonts.googleapis.com/css2?family=Nunito:wght@400;600;700;800;900&display=swap" rel="stylesheet"/>
 <style>
-  :root {
-    --bg: #0a0a0a;
-    --panel: #111;
-    --border: #222;
-    --accent: #c8f135;
-    --red: #ff3b3b;
-    --dim: #555;
-    --text: #e8e8e8;
-  }
+:root {
+  --bg:       #f7f5f0;
+  --white:    #ffffff;
+  --text:     #1a1a1a;
+  --muted:    #99998a;
+  --border:   rgba(0,0,0,0.07);
+  --yellow:   #f5e642;
+  --yellow2:  #e8d800;
+  --safe-top: env(safe-area-inset-top, 0px);
+  --safe-bot: env(safe-area-inset-bottom, 0px);
+}
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  width: 100%; height: 100%;
+  background: var(--bg); color: var(--text);
+  font-family: 'Nunito', sans-serif;
+  overflow: hidden; -webkit-tap-highlight-color: transparent;
+}
+.screen {
+  position: fixed; inset: 0; display: flex; flex-direction: column;
+  transition: opacity 0.18s;
+  padding-bottom: 88px;
+}
+.screen.hidden { opacity: 0; pointer-events: none; }
+.scroll {
+  flex: 1; overflow-y: auto;
+  padding: calc(var(--safe-top) + 1.25rem) 1.25rem 1rem;
+  display: flex; flex-direction: column; gap: 1.25rem;
+}
+.bnav {
+  position: fixed;
+  bottom: 12px;
+  left: 50%; transform: translateX(-50%);
+  background: #1a1a1a; border-radius: 100px;
+  padding: 8px; display: flex; gap: 2px;
+  z-index: 200; box-shadow: 0 8px 30px rgba(0,0,0,0.2);
+}
+.bnav-btn {
+  width: 56px; height: 44px; border-radius: 100px;
+  border: none; background: transparent; color: #555;
+  display: flex; align-items: center; justify-content: center;
+  cursor: pointer; transition: background 0.15s, color 0.15s;
+}
+.bnav-btn svg { width: 22px; height: 22px; }
+.bnav-btn.active { background: var(--yellow); color: #1a1a1a; }
+.page-title { font-size: 1.5rem; font-weight: 900; letter-spacing: -0.03em; }
+.section-label {
+  font-size: 0.65rem; font-weight: 800; letter-spacing: 0.1em;
+  text-transform: uppercase; color: var(--muted); margin-bottom: 0.6rem;
+}
 
-  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+/* HOME */
+.brand { font-size: 2.2rem; font-weight: 900; letter-spacing: -0.04em; line-height: 1; }
+.brand span { color: var(--yellow2); }
+.today-strip { display: grid; grid-template-columns: repeat(3,1fr); gap: 0.65rem; }
+.today-card { background: var(--yellow); border-radius: 18px; padding: 0.9rem 0.5rem; text-align: center; }
+.today-card:nth-child(2) { background: #1a1a1a; }
+.today-card:nth-child(3) { background: var(--white); border: 1px solid var(--border); }
+.today-val { font-size: 1.6rem; font-weight: 900; line-height: 1; }
+.today-card:nth-child(2) .today-val { color: var(--yellow); }
+.today-lbl { font-size: 0.55rem; font-weight: 800; margin-top: 3px; text-transform: uppercase; letter-spacing: 0.07em; color: rgba(0,0,0,0.45); }
+.today-card:nth-child(2) .today-lbl { color: rgba(255,255,255,0.45); }
+.today-card:nth-child(3) .today-lbl { color: var(--muted); }
+.ex-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+.ex-card {
+  background: var(--white); border: 1.5px solid var(--border);
+  border-radius: 22px; padding: 1rem; cursor: pointer;
+  display: flex; flex-direction: column; gap: 0.35rem;
+  min-height: 100px; position: relative;
+  transition: transform 0.1s, border-color 0.15s, background 0.15s;
+  user-select: none;
+}
+.ex-card:active { transform: scale(0.96); }
+.ex-card.selected { border-color: var(--yellow2); background: var(--yellow); }
+.ex-emoji { font-size: 1.5rem; line-height: 1; }
+.ex-name { font-size: 0.8rem; font-weight: 800; color: var(--muted); line-height: 1.2; margin-top: auto; }
+.ex-card.selected .ex-name { color: rgba(0,0,0,0.6); }
+.start-btn {
+  width: 100%; padding: 1.1rem; border: none; border-radius: 18px;
+  background: #1a1a1a; color: var(--yellow);
+  font-family: 'Nunito', sans-serif; font-size: 1rem; font-weight: 900;
+  cursor: pointer; transition: transform 0.1s, opacity 0.1s;
+}
+.start-btn:active { transform: scale(0.98); opacity: 0.88; }
 
-  body {
-    background: var(--bg);
-    color: var(--text);
-    font-family: 'DM Mono', monospace;
-    min-height: 100vh;
-    display: flex;
-    flex-direction: column;
-  }
+/* COUNTER */
+#screen-counter { padding-bottom: 0; }
+#output-canvas { position: absolute; inset: 0; width: 100%; height: 100%; }
+#webcam, #capture-canvas { display: none; }
+.cam-ph {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 10px;
+  background: #111; color: #444; font-size: 0.65rem; font-weight: 800;
+  letter-spacing: 0.12em; text-transform: uppercase; cursor: pointer;
+  padding-bottom: calc(var(--safe-bot) + 88px);
+}
+.cam-ph svg { opacity: 0.2; margin-bottom: 6px; }
+.ctr-top {
+  position: absolute; top: 0; left: 0; right: 0; z-index: 10;
+  padding: calc(var(--safe-top) + 0.75rem) 1rem 2rem;
+  background: linear-gradient(to bottom, rgba(0,0,0,0.65), transparent);
+  display: flex; align-items: center; justify-content: space-between;
+}
+.ex-pill {
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2); border-radius: 100px;
+  padding: 7px 16px; font-size: 0.7rem; font-weight: 800;
+  color: white; text-transform: uppercase; letter-spacing: 0.04em;
+}
+.live-badge {
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(255,255,255,0.15); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.2); border-radius: 100px;
+  padding: 7px 12px; font-size: 0.62rem; font-weight: 800; color: white;
+}
+.ldot { width: 6px; height: 6px; border-radius: 50%; background: #4ade80; animation: lpulse 1.5s infinite; }
+@keyframes lpulse { 0%,100%{opacity:1} 50%{opacity:0.2} }
+.rep-overlay {
+  position: absolute; top: 45%; left: 50%;
+  transform: translate(-46%, -50%);
+  text-align: center; pointer-events: none; z-index: 5;
+}
+.rep-big {
+  font-size: 9rem; font-weight: 900; color: white; line-height: 1;
+  letter-spacing: -0.05em; text-shadow: 0 2px 24px rgba(0,0,0,0.3);
+  transition: transform 0.08s, color 0.1s;
+}
+.rep-big.pop { transform: scale(1.14); color: var(--yellow); }
+.rep-word { font-size: 0.68rem; font-weight: 800; color: rgba(255,255,255,0.5); letter-spacing: 0.2em; text-transform: uppercase; }
+.stage-tag {
+  position: absolute; z-index: 10;
+  top: calc(var(--safe-top) + 72px);
+  left: 50%; transform: translateX(-50%);
+  background: rgba(255,255,255,0.18); backdrop-filter: blur(10px);
+  border: 1px solid rgba(255,255,255,0.25); border-radius: 100px;
+  padding: 8px 22px; font-size: 0.7rem; font-weight: 800;
+  color: white; letter-spacing: 0.1em; text-transform: uppercase;
+  white-space: nowrap; pointer-events: none;
+}
+.no-pose {
+  position: absolute; z-index: 10;
+  top: calc(var(--safe-top) + 78px); left: 50%; transform: translateX(-50%);
+  background: rgba(239,68,68,0.2); border: 1px solid rgba(239,68,68,0.4);
+  border-radius: 10px; padding: 6px 14px;
+  font-size: 0.62rem; font-weight: 800; color: #fca5a5;
+  opacity: 0; transition: opacity 0.25s; white-space: nowrap;
+}
+.no-pose.show { opacity: 1; }
+.pp { background: rgba(0,0,0,0.32); backdrop-filter: blur(6px); border-radius: 7px; padding: 3px 8px; font-size: 0.56rem; font-weight: 700; color: rgba(255,255,255,0.45); }
+.pp b { color: rgba(255,255,255,0.85); }
+.rec-ind {
+  position: absolute; z-index: 10;
+  top: calc(var(--safe-top) + 72px); left: 1rem;
+  display: flex; align-items: center; gap: 5px;
+  background: rgba(0,0,0,0.32); backdrop-filter: blur(6px);
+  border-radius: 7px; padding: 3px 8px;
+  font-size: 0.56rem; font-weight: 800; color: rgba(255,255,255,0.6);
+  opacity: 0; transition: opacity 0.3s;
+}
+.rec-ind.show { opacity: 1; }
+.rdot { width: 6px; height: 6px; border-radius: 50%; background: #ef4444; animation: lpulse 1s infinite; }
+.sw-row {
+  position: absolute; z-index: 10;
+  bottom: calc(var(--safe-bot) + 136px);
+  left: 0; right: 0; padding: 0 1rem;
+  display: flex; gap: 8px; overflow-x: auto;
+  scrollbar-width: none; -webkit-overflow-scrolling: touch;
+}
+.sw-row::-webkit-scrollbar { display: none; }
+.sw-chip {
+  flex-shrink: 0;
+  background: rgba(255,255,255,0.12); backdrop-filter: blur(8px);
+  border: 1.5px solid rgba(255,255,255,0.15); border-radius: 100px;
+  padding: 7px 13px; font-family: 'Nunito', sans-serif;
+  font-size: 0.63rem; font-weight: 800; color: rgba(255,255,255,0.6);
+  cursor: pointer; white-space: nowrap;
+  transition: border-color 0.15s, color 0.15s, background 0.15s;
+}
+.sw-chip.active { border-color: var(--yellow); color: var(--yellow); background: rgba(245,230,66,0.1); }
+.ctr-btns {
+  position: absolute; z-index: 10;
+  bottom: 78px;
+  left: 1rem; right: 1rem; display: flex; gap: 0.6rem;
+}
+.ctr-btn {
+  flex: 1; padding: 0.85rem; border-radius: 16px; border: none;
+  font-family: 'Nunito', sans-serif; font-size: 0.85rem; font-weight: 900;
+  cursor: pointer; transition: transform 0.1s;
+}
+.ctr-btn:active { transform: scale(0.96); }
+.ctr-ghost { background: rgba(255,255,255,0.16); backdrop-filter: blur(10px); border: 1px solid rgba(255,255,255,0.2); color: white; }
+.ctr-yellow { background: var(--yellow); color: #1a1a1a; }
+.ctr-red { background: #ef4444; color: white; }
 
-  header {
-    height: 52px;
-    background: var(--panel);
-    border-bottom: 1px solid var(--border);
-    display: flex;
-    align-items: center;
-    justify-content: space-between;
-    padding: 0 1.5rem;
-  }
+/* SETS */
+.sets-empty {
+  flex: 1; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 0.75rem;
+  color: var(--muted); font-size: 0.85rem; font-weight: 700;
+  text-align: center; padding: 3rem;
+}
+.set-card { background: var(--white); border-radius: 20px; border: 1px solid var(--border); overflow: hidden; cursor: pointer; margin-bottom: 0.65rem; }
+.set-card-top { padding: 1rem 1.1rem; display: flex; align-items: center; justify-content: space-between; }
+.set-ex { font-size: 0.95rem; font-weight: 800; }
+.set-meta-txt { font-size: 0.6rem; font-weight: 700; color: var(--muted); margin-top: 2px; text-transform: uppercase; letter-spacing: 0.06em; }
+.set-reps-big { font-size: 2rem; font-weight: 900; line-height: 1; }
+.set-expand { display: none; border-top: 1px solid var(--border); }
+.set-expand.open { display: block; }
+.set-video { width: 100%; background: #000; max-height: 260px; object-fit: contain; display: block; }
+.set-feedback-box { padding: 1rem 1.1rem; font-size: 0.8rem; font-weight: 600; line-height: 1.65; color: var(--muted); border-top: 1px solid var(--border); }
+.set-feedback-box.ready { color: var(--text); }
+.dot-row { display: flex; gap: 4px; padding: 2px 0; }
+.dp { width: 5px; height: 5px; border-radius: 50%; background: #ccc; animation: dpop 1.2s infinite; }
+.dp:nth-child(2) { animation-delay: 0.2s; }
+.dp:nth-child(3) { animation-delay: 0.4s; }
+@keyframes dpop { 0%,100%{opacity:0.25;transform:scale(1)} 50%{opacity:1;transform:scale(1.35)} }
 
-  .logo {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.5rem;
-    letter-spacing: 0.1em;
-    color: var(--accent);
-  }
+/* PROFILE */
+.profile-hero { background: #1a1a1a; border-radius: 26px; padding: 1.5rem; display: flex; align-items: center; gap: 1rem; }
+.profile-av { width: 60px; height: 60px; border-radius: 50%; background: var(--yellow); display: flex; align-items: center; justify-content: center; font-size: 1.5rem; font-weight: 900; color: #1a1a1a; flex-shrink: 0; }
+.profile-name { font-size: 1.1rem; font-weight: 900; color: white; }
+.profile-sub { font-size: 0.65rem; font-weight: 700; color: #555; margin-top: 3px; }
+.stats4 { display: grid; grid-template-columns: 1fr 1fr; gap: 0.65rem; }
+.s4card { background: var(--white); border-radius: 18px; border: 1px solid var(--border); padding: 1rem; display: flex; flex-direction: column; gap: 2px; }
+.s4card:first-child { background: var(--yellow); border-color: var(--yellow); }
+.s4val { font-size: 1.7rem; font-weight: 900; line-height: 1; }
+.s4lbl { font-size: 0.56rem; font-weight: 800; color: var(--muted); text-transform: uppercase; letter-spacing: 0.07em; }
+.s4card:first-child .s4lbl { color: rgba(0,0,0,0.45); }
+.week-strip { background: var(--white); border-radius: 18px; border: 1px solid var(--border); padding: 1rem; }
+.week-days { display: flex; gap: 6px; margin-top: 0.75rem; }
+.wday { flex: 1; height: 38px; border-radius: 10px; background: var(--bg); border: 1px solid var(--border); display: flex; align-items: center; justify-content: center; font-size: 0.5rem; font-weight: 800; color: var(--muted); text-transform: uppercase; }
+.wday.done { background: #1a1a1a; border-color: #1a1a1a; color: var(--yellow); }
+.wday.today { border-color: var(--yellow2); color: var(--yellow2); }
+.pr-card { background: var(--white); border-radius: 16px; border: 1px solid var(--border); padding: 0.9rem 1rem; display: flex; align-items: center; justify-content: space-between; margin-bottom: 0.5rem; }
+.pr-name { font-size: 0.88rem; font-weight: 800; }
+.pr-val { font-size: 0.88rem; font-weight: 900; color: var(--yellow2); }
 
-  .logo span { color: var(--dim); }
-
-  .live-indicator {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    font-size: 0.65rem;
-    letter-spacing: 0.12em;
-    color: var(--dim);
-  }
-
-  .dot {
-    width: 7px; height: 7px;
-    border-radius: 50%;
-    background: var(--dim);
-    transition: background 0.3s;
-  }
-
-  .dot.active {
-    background: var(--accent);
-    animation: blink 1.4s infinite;
-  }
-
-  @keyframes blink {
-    0%, 100% { opacity: 1; }
-    50% { opacity: 0.2; }
-  }
-
-  main {
-    display: grid;
-    grid-template-columns: 1fr 280px;
-    flex: 1;
-  }
-
-  /* Video side */
-  .video-panel {
-    position: relative;
-    background: #000;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    border-right: 1px solid var(--border);
-    overflow: hidden;
-  }
-
-  #output-canvas {
-    width: 100%;
-    height: 100%;
-    object-fit: contain;
-  }
-
-  #webcam { display: none; }
-  #capture-canvas { display: none; }
-
-  .placeholder {
-    position: absolute;
-    inset: 0;
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    justify-content: center;
-    gap: 12px;
-    color: var(--dim);
-    font-size: 0.7rem;
-    letter-spacing: 0.12em;
-  }
-
-  .placeholder svg { opacity: 0.15; }
-
-  /* Corner brackets */
-  .bracket {
-    position: absolute;
-    width: 28px; height: 28px;
-    pointer-events: none;
-    opacity: 0.35;
-  }
-  .bracket.tl { top: 14px; left: 14px;
-    border-top: 2px solid var(--accent);
-    border-left: 2px solid var(--accent); }
-  .bracket.tr { top: 14px; right: 14px;
-    border-top: 2px solid var(--accent);
-    border-right: 2px solid var(--accent); }
-  .bracket.bl { bottom: 14px; left: 14px;
-    border-bottom: 2px solid var(--accent);
-    border-left: 2px solid var(--accent); }
-  .bracket.br { bottom: 14px; right: 14px;
-    border-bottom: 2px solid var(--accent);
-    border-right: 2px solid var(--accent); }
-
-  .stage-pill {
-    position: absolute;
-    bottom: 14px;
-    left: 50%;
-    transform: translateX(-50%);
-    background: rgba(0,0,0,0.7);
-    border: 1px solid var(--border);
-    padding: 3px 18px;
-    font-size: 0.65rem;
-    letter-spacing: 0.15em;
-    color: var(--accent);
-    pointer-events: none;
-  }
-
-  /* Sidebar */
-  aside {
-    background: var(--panel);
-    display: flex;
-    flex-direction: column;
-    overflow-y: auto;
-  }
-
-  .block {
-    padding: 1.25rem;
-    border-bottom: 1px solid var(--border);
-  }
-
-  .block-label {
-    font-size: 0.58rem;
-    letter-spacing: 0.18em;
-    color: var(--dim);
-    margin-bottom: 1rem;
-    text-transform: uppercase;
-  }
-
-  /* Rep counter */
-  .rep-wrap { text-align: center; padding: 0.5rem 0; }
-
-  .rep-num {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 6.5rem;
-    line-height: 1;
-    color: var(--accent);
-    transition: transform 0.08s;
-  }
-
-  .rep-num.pop { transform: scale(1.18); }
-
-  .rep-sub {
-    font-size: 0.6rem;
-    letter-spacing: 0.2em;
-    color: var(--dim);
-    margin-top: 4px;
-  }
-
-  .stage-line {
-    font-size: 0.75rem;
-    letter-spacing: 0.1em;
-    color: var(--text);
-    text-align: center;
-    margin-top: 8px;
-    min-height: 1.1em;
-  }
-
-  /* Exercise buttons */
-  .ex-grid {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
-  }
-
-  .ex-btn {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    color: var(--dim);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.08em;
-    padding: 10px 6px;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: border-color 0.15s, color 0.15s;
-    text-align: center;
-  }
-
-  .ex-btn:hover { border-color: var(--accent); color: var(--text); }
-
-  .ex-btn.active {
-    border-color: var(--accent);
-    color: var(--accent);
-    background: rgba(200,241,53,0.04);
-  }
-
-  .ex-btn .shortcut {
-    display: block;
-    font-size: 0.5rem;
-    color: var(--dim);
-    margin-top: 3px;
-  }
-
-  /* Control buttons */
-  .ctrl {
-    width: 100%;
-    padding: 9px;
-    margin-bottom: 7px;
-    background: transparent;
-    border: 1px solid var(--border);
-    color: var(--dim);
-    font-family: 'DM Mono', monospace;
-    font-size: 0.65rem;
-    letter-spacing: 0.1em;
-    cursor: pointer;
-    text-transform: uppercase;
-    transition: border-color 0.15s, color 0.15s;
-  }
-
-  .ctrl:last-child { margin-bottom: 0; }
-  .ctrl:hover { border-color: var(--accent); color: var(--accent); }
-  .ctrl.go { border-color: var(--accent); color: var(--accent); }
-  .ctrl.go:hover { background: rgba(200,241,53,0.06); }
-
-  /* Metrics */
-  .metrics {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 7px;
-  }
-
-  .metric {
-    background: var(--bg);
-    border: 1px solid var(--border);
-    padding: 10px;
-    text-align: center;
-  }
-
-  .metric-val {
-    font-family: 'Bebas Neue', sans-serif;
-    font-size: 1.5rem;
-  }
-
-  .metric-label {
-    font-size: 0.52rem;
-    letter-spacing: 0.1em;
-    color: var(--dim);
-    margin-top: 2px;
-  }
-
-  footer {
-    padding: 0.6rem 1.5rem;
-    border-top: 1px solid var(--border);
-    font-size: 0.58rem;
-    color: var(--dim);
-    letter-spacing: 0.08em;
-    display: flex;
-    justify-content: space-between;
-  }
+/* MUSCLE MAP */
+.muscle-section { background: var(--white); border-radius: 22px; border: 1px solid var(--border); padding: 1.1rem; display: flex; flex-direction: column; gap: 0.75rem; }
+.muscle-wrap { display: flex; justify-content: center; gap: 2rem; padding: 0.5rem 0; }
+.muscle-svg { width: 90px; }
+.muscle-legend { display: flex; flex-wrap: wrap; gap: 6px; }
+.muscle-tag { font-size: 0.6rem; font-weight: 800; padding: 3px 10px; border-radius: 100px; background: var(--bg); color: var(--muted); border: 1px solid var(--border); }
+.muscle-tag.worked { background: var(--yellow); color: #1a1a1a; border-color: var(--yellow); }
 </style>
 </head>
 <body>
 
-<header>
-  <div class="logo">Rep<span>Counter</span>DX</div>
-  <div class="live-indicator">
-    <div class="dot" id="dot"></div>
-    <span id="status">OFFLINE</span>
+<!-- HOME -->
+<div class="screen" id="screen-home">
+  <div class="scroll">
+    <div class="brand">Rep<span>AI</span></div>
+
+    <div>
+      <div class="section-label">Today</div>
+      <div class="today-strip">
+        <div class="today-card"><div class="today-val" id="h-reps">0</div><div class="today-lbl">Reps</div></div>
+        <div class="today-card"><div class="today-val" id="h-sets">0</div><div class="today-lbl">Sets</div></div>
+        <div class="today-card"><div class="today-val" id="h-exs">0</div><div class="today-lbl">Moves</div></div>
+      </div>
+    </div>
+
+    <div>
+      <div class="section-label">Choose exercise</div>
+      <div class="ex-grid" id="ex-grid"></div>
+    </div>
+
+    <button class="start-btn" onclick="goTab('counter'); startWorkout()">Start workout →</button>
   </div>
-</header>
+</div>
 
-<main>
-  <div class="video-panel">
-    <video id="webcam" autoplay playsinline muted></video>
-    <canvas id="output-canvas"></canvas>
-    <canvas id="capture-canvas"></canvas>
+<!-- COUNTER -->
+<div class="screen hidden" id="screen-counter" style="padding-bottom:0">
+  <canvas id="output-canvas"></canvas>
+  <video id="webcam" autoplay playsinline muted></video>
+  <canvas id="capture-canvas"></canvas>
 
-    <div class="placeholder" id="placeholder">
-      <svg width="44" height="44" fill="none" stroke="currentColor" stroke-width="1.2" viewBox="0 0 24 24">
-        <path d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.89L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
-      </svg>
-      <span>CLICK START CAMERA TO BEGIN</span>
-    </div>
-
-    <div class="bracket tl"></div>
-    <div class="bracket tr"></div>
-    <div class="bracket bl"></div>
-    <div class="bracket br"></div>
-    <div class="stage-pill" id="stage-pill">STANDBY</div>
+  <div class="cam-ph" id="cam-ph" onclick="startCamera()">
+    <svg width="70" height="70" fill="none" stroke="currentColor" stroke-width="1.4" viewBox="0 0 24 24">
+      <path d="M15 10l4.553-2.069A1 1 0 0121 8.82v6.36a1 1 0 01-1.447.89L15 14M3 8a2 2 0 012-2h10a2 2 0 012 2v8a2 2 0 01-2 2H5a2 2 0 01-2-2V8z"/>
+    </svg>
+    <span id="cam-msg">Tap to start camera</span>
   </div>
 
-  <aside>
-    <div class="block">
-      <div class="block-label">Repetitions</div>
-      <div class="rep-wrap">
-        <div class="rep-num" id="rep-num">0</div>
-        <div class="rep-sub">REPS</div>
-        <div class="stage-line" id="stage-line">—</div>
+  <div class="ctr-top">
+  <div class="ex-pill" id="ctr-pill">Bicep Curl</div>
+  <div style="display:flex;align-items:center;gap:8px">
+    <div class="live-badge" id="target-wrap">
+      <span style="opacity:0.6">🎯</span>
+      <input id="target-input" type="number" min="1" max="999" placeholder="—"
+        style="width:36px;background:transparent;border:none;color:white;font-family:'Nunito',sans-serif;font-weight:800;font-size:0.75rem;text-align:center;outline:none;"
+        onchange="updateTarget(this.value)"/>
+    </div>
+    <div class="live-badge" id="live-badge" style="opacity:0.35">
+      <div class="ldot"></div><span>Live</span>
+    </div>
+  </div>
+</div>
+
+  <div class="rec-ind" id="rec-ind"><div class="rdot"></div>REC</div>
+
+  <div class="rep-overlay" id="rep-overlay" style="display:none">
+    <div class="rep-big" id="rep-big">0</div>
+    <div class="rep-word">reps</div>
+  </div>
+
+  <div class="no-pose" id="no-pose">⚠ No pose detected</div>
+  <div class="stage-tag" id="stage-tag">Standby</div>
+  <div class="sw-row" id="sw-row"></div>
+
+  <div class="ctr-btns" id="ctr-btns">
+    <!-- filled by JS based on state -->
+  </div>
+</div>
+
+<!-- SETS -->
+<div class="screen hidden" id="screen-sets">
+  <div class="scroll">
+    <div class="page-title">Your sets</div>
+    <div id="sets-container"></div>
+  </div>
+</div>
+
+<!-- PROFILE -->
+<div class="screen hidden" id="screen-profile">
+  <div class="scroll">
+    <div class="page-title">Profile</div>
+    <div class="profile-hero">
+      <div class="profile-av">R</div>
+      <div>
+        <div class="profile-name">Rep Athlete</div>
+        <div class="profile-sub" id="p-since">Member since today</div>
+      </div>
+    </div>
+    <div>
+      <div class="section-label">All time</div>
+      <div class="stats4">
+        <div class="s4card"><div class="s4val" id="p-reps">0</div><div class="s4lbl">Total reps</div></div>
+        <div class="s4card"><div class="s4val" id="p-sets">0</div><div class="s4lbl">Total sets</div></div>
+        <div class="s4card"><div class="s4val" id="p-days">0</div><div class="s4lbl">Active days</div></div>
+        <div class="s4card"><div class="s4val" id="p-streak">0</div><div class="s4lbl">Best streak</div></div>
+      </div>
+    </div>
+    <div class="week-strip">
+      <div class="section-label" style="margin-bottom:0">This week</div>
+      <div class="week-days" id="week-days"></div>
+    </div>
+
+    <!-- MUSCLE MAP -->
+    <div class="muscle-section">
+      <div class="section-label" style="margin-bottom:0">Muscles worked this week</div>
+      <div class="muscle-wrap">
+        <!-- FRONT -->
+        <svg class="muscle-svg" viewBox="0 0 100 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- head -->
+          <ellipse cx="50" cy="16" rx="13" ry="15" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <!-- neck -->
+          <path d="M44 29 Q50 33 56 29 L57 38 Q50 41 43 38Z" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <!-- chest -->
+          <path d="M29 42 Q38 38 50 37 Q62 38 71 42 Q73 52 71 60 Q60 64 50 65 Q40 64 29 60 Q27 52 29 42Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-chest" class="muscle-body"/>
+          <!-- left shoulder -->
+          <path d="M29 42 Q20 44 16 50 Q15 58 20 63 Q25 65 29 62 Q29 52 29 42Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-shoulder-l" class="muscle-body"/>
+          <!-- right shoulder -->
+          <path d="M71 42 Q80 44 84 50 Q85 58 80 63 Q75 65 71 62 Q71 52 71 42Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-shoulder-r" class="muscle-body"/>
+          <!-- left bicep -->
+          <path d="M16 63 Q11 70 11 80 Q11 88 16 92 Q20 93 23 90 Q24 80 22 63Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-bicep-l" class="muscle-body"/>
+          <!-- right bicep -->
+          <path d="M84 63 Q89 70 89 80 Q89 88 84 92 Q80 93 77 90 Q76 80 78 63Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-bicep-r" class="muscle-body"/>
+          <!-- left forearm -->
+          <path d="M14 93 Q10 103 11 115 Q14 118 18 117 Q21 105 22 92Z" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <!-- right forearm -->
+          <path d="M86 93 Q90 103 89 115 Q86 118 82 117 Q79 105 78 92Z" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <!-- hands -->
+          <ellipse cx="13" cy="121" rx="5" ry="7" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <ellipse cx="87" cy="121" rx="5" ry="7" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <!-- abs left col -->
+          <path d="M37 66 Q43 65 43 75 Q43 85 37 86 Q33 85 33 75 Q33 66 37 66Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-abs-tl" class="muscle-body"/>
+          <path d="M37 87 Q43 86 43 96 Q43 106 37 107 Q33 106 33 96 Q33 87 37 87Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-abs-ml" class="muscle-body"/>
+          <!-- abs right col -->
+          <path d="M63 66 Q67 66 67 75 Q67 85 63 86 Q57 85 57 75 Q57 65 63 66Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-abs-tr" class="muscle-body"/>
+          <path d="M63 87 Q67 87 67 96 Q67 106 63 107 Q57 106 57 96 Q57 86 63 87Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-abs-mr" class="muscle-body"/>
+          <!-- obliques -->
+          <path d="M29 60 Q27 70 26 90 Q28 100 33 103 Q33 85 33 66 Q31 63 29 60Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-oblique-l" class="muscle-body"/>
+          <path d="M71 60 Q73 70 74 90 Q72 100 67 103 Q67 85 67 66 Q69 63 71 60Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-oblique-r" class="muscle-body"/>
+          <!-- left quad -->
+          <path d="M31 108 Q27 125 27 148 Q30 158 38 158 Q44 155 44 145 Q46 125 42 108Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-quad-l" class="muscle-body"/>
+          <!-- right quad -->
+          <path d="M69 108 Q73 125 73 148 Q70 158 62 158 Q56 155 56 145 Q54 125 58 108Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-quad-r" class="muscle-body"/>
+          <!-- knees -->
+          <ellipse cx="36" cy="162" rx="9" ry="6" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <ellipse cx="64" cy="162" rx="9" ry="6" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <!-- left calf -->
+          <path d="M29 168 Q27 183 29 198 Q32 204 38 203 Q44 200 44 194 Q45 180 42 168Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-calf-l" class="muscle-body"/>
+          <!-- right calf -->
+          <path d="M71 168 Q73 183 71 198 Q68 204 62 203 Q56 200 56 194 Q55 180 58 168Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-calf-r" class="muscle-body"/>
+          <!-- feet -->
+          <path d="M28 204 Q25 210 28 215 Q34 217 42 215 Q46 212 44 206Z" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <path d="M72 204 Q75 210 72 215 Q66 217 58 215 Q54 212 56 206Z" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+        </svg>
+
+        <!-- BACK -->
+        <svg class="muscle-svg" viewBox="0 0 100 240" fill="none" xmlns="http://www.w3.org/2000/svg">
+          <!-- head -->
+          <ellipse cx="50" cy="16" rx="13" ry="15" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <!-- neck -->
+          <path d="M44 29 Q50 33 56 29 L57 38 Q50 41 43 38Z" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <!-- traps -->
+          <path d="M43 38 Q50 35 57 38 Q64 42 68 46 Q60 48 50 48 Q40 48 32 46 Q36 42 43 38Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-trap" class="muscle-body"/>
+          <!-- left rear delt -->
+          <path d="M29 46 Q20 48 16 54 Q15 62 20 66 Q25 67 29 64 Q29 54 29 46Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-rear-delt-l" class="muscle-body"/>
+          <!-- right rear delt -->
+          <path d="M71 46 Q80 48 84 54 Q85 62 80 66 Q75 67 71 64 Q71 54 71 46Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-rear-delt-r" class="muscle-body"/>
+          <!-- left lat -->
+          <path d="M29 50 Q22 62 22 80 Q23 92 30 96 Q36 98 38 92 Q36 78 34 52Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-lat-l" class="muscle-body"/>
+          <!-- right lat -->
+          <path d="M71 50 Q78 62 78 80 Q77 92 70 96 Q64 98 62 92 Q64 78 66 52Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-lat-r" class="muscle-body"/>
+          <!-- left tricep -->
+          <path d="M16 66 Q11 73 11 83 Q11 91 16 94 Q20 95 23 92 Q24 82 22 66Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-tricep-l" class="muscle-body"/>
+          <!-- right tricep -->
+          <path d="M84 66 Q89 73 89 83 Q89 91 84 94 Q80 95 77 92 Q76 82 78 66Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-tricep-r" class="muscle-body"/>
+          <!-- forearms -->
+          <path d="M14 95 Q10 105 11 117 Q14 120 18 119 Q21 107 22 94Z" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <path d="M86 95 Q90 105 89 117 Q86 120 82 119 Q79 107 78 94Z" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <!-- hands -->
+          <ellipse cx="13" cy="123" rx="5" ry="7" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <ellipse cx="87" cy="123" rx="5" ry="7" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <!-- mid/upper back -->
+          <path d="M34 50 Q38 48 50 48 Q62 48 66 50 Q68 60 66 78 Q60 84 50 85 Q40 84 34 78 Q32 60 34 50Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-upper-back" class="muscle-body"/>
+          <!-- lower back -->
+          <path d="M38 92 Q44 96 50 97 Q56 96 62 92 Q64 100 62 110 Q56 114 50 114 Q44 114 38 110 Q36 100 38 92Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-lower-back" class="muscle-body"/>
+          <!-- left glute -->
+          <path d="M31 110 Q28 122 30 134 Q34 140 42 140 Q48 138 50 132 Q50 120 46 110Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-glute-l" class="muscle-body"/>
+          <!-- right glute -->
+          <path d="M69 110 Q72 122 70 134 Q66 140 58 140 Q52 138 50 132 Q50 120 54 110Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-glute-r" class="muscle-body"/>
+          <!-- left hamstring -->
+          <path d="M30 140 Q26 158 28 176 Q31 182 38 182 Q44 180 46 172 Q47 156 44 140Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-ham-l" class="muscle-body"/>
+          <!-- right hamstring -->
+          <path d="M70 140 Q74 158 72 176 Q69 182 62 182 Q56 180 54 172 Q53 156 56 140Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-ham-r" class="muscle-body"/>
+          <!-- knees back -->
+          <ellipse cx="36" cy="185" rx="9" ry="5" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <ellipse cx="64" cy="185" rx="9" ry="5" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <!-- left calf back -->
+          <path d="M29 190 Q27 205 30 218 Q33 222 39 221 Q44 218 44 212 Q45 198 42 190Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-calf-back-l" class="muscle-body"/>
+          <!-- right calf back -->
+          <path d="M71 190 Q73 205 70 218 Q67 222 61 221 Q56 218 56 212 Q55 198 58 190Z" fill="#e0ddd6" stroke="#ccc" stroke-width="0.8" id="m-calf-back-r" class="muscle-body"/>
+          <!-- feet -->
+          <path d="M28 222 Q25 228 28 233 Q34 235 42 233 Q46 230 44 224Z" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+          <path d="M72 222 Q75 228 72 233 Q66 235 58 233 Q54 230 56 224Z" fill="#e8e6e0" stroke="#d0cec8" stroke-width="0.8"/>
+        </svg>
+      </div>
+      <div class="muscle-legend" id="muscle-legend">
+        <div class="muscle-tag">No workouts yet this week</div>
       </div>
     </div>
 
-    <div class="block">
-      <div class="block-label">Exercise</div>
-      <div class="ex-grid">
-        <button class="ex-btn active" data-mode="curl" onclick="setExercise('curl')">
-          Bicep Curl <span class="shortcut">[C]</span>
-        </button>
-        <button class="ex-btn" data-mode="squat" onclick="setExercise('squat')">
-          Squat <span class="shortcut">[S]</span>
-        </button>
-        <button class="ex-btn" data-mode="lateral" onclick="setExercise('lateral')">
-          Lateral Raise <span class="shortcut">[L]</span>
-        </button>
-        <button class="ex-btn" data-mode="press" onclick="setExercise('press')">
-          Shoulder Press <span class="shortcut">[P]</span>
-        </button>
+    <div>
+      <div class="section-label">Personal records</div>
+      <div id="pr-list">
+        <div style="color:var(--muted);font-size:0.8rem;font-weight:700;text-align:center;padding:1rem">Complete sets to see your PRs</div>
       </div>
     </div>
+  </div>
+</div>
 
-    <div class="block">
-      <div class="block-label">Controls</div>
-      <button class="ctrl go" id="cam-btn" onclick="toggleCamera()">▶ START CAMERA</button>
-      <button class="ctrl" onclick="resetReps()">↺ RESET REPS</button>
-    </div>
-
-    <div class="block">
-      <div class="block-label">Performance</div>
-      <div class="metrics">
-        <div class="metric">
-          <div class="metric-val" id="fps">—</div>
-          <div class="metric-label">FPS</div>
-        </div>
-        <div class="metric">
-          <div class="metric-val" id="lat">—</div>
-          <div class="metric-label">MS</div>
-        </div>
-      </div>
-    </div>
-  </aside>
-</main>
-
-<footer>
-  <span>REPCOUNTERDX · YOLOV8 POSE · FLASK</span>
-  <span id="mode-footer">MODE: CURL</span>
-</footer>
+<!-- BOTTOM NAV -->
+<nav class="bnav">
+  <button class="bnav-btn active" id="nav-home" onclick="goTab('home')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 9l9-7 9 7v11a2 2 0 01-2 2H5a2 2 0 01-2-2z"/><polyline points="9 22 9 12 15 12 15 22"/></svg>
+  </button>
+  <button class="bnav-btn" id="nav-counter" onclick="goTab('counter')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+  </button>
+  <button class="bnav-btn" id="nav-sets" onclick="goTab('sets')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
+  </button>
+  <button class="bnav-btn" id="nav-profile" onclick="goTab('profile')">
+    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 00-4-4H8a4 4 0 00-4 4v2"/><circle cx="12" cy="7" r="4"/></svg>
+  </button>
+</nav>
 
 <script>
-  const webcam   = document.getElementById("webcam");
-  const outCanvas= document.getElementById("output-canvas");
-  const capCanvas= document.getElementById("capture-canvas");
-  const ctxOut   = outCanvas.getContext("2d");
-  const ctxCap   = capCanvas.getContext("2d");
+const EX_MUSCLES = {
+  curl:    { front:["m-bicep-l","m-bicep-r"], back:[], label:"Biceps" },
+  squat:   { front:["m-quad-l","m-quad-r"], back:["m-glute-l","m-glute-r","m-ham-l","m-ham-r"], label:"Quads, Glutes, Hamstrings" },
+  lateral: { front:["m-shoulder-l","m-shoulder-r"], back:["m-rear-delt-l","m-rear-delt-r","m-trap"], label:"Shoulders, Traps" },
+  press:   { front:["m-shoulder-l","m-shoulder-r"], back:["m-tricep-l","m-tricep-r","m-trap"], label:"Shoulders, Triceps, Traps" },
+  pushup:  { front:["m-chest","m-shoulder-l","m-shoulder-r"], back:["m-tricep-l","m-tricep-r"], label:"Chest, Shoulders, Triceps" },
+  lunge:   { front:["m-quad-l","m-quad-r"], back:["m-glute-l","m-glute-r","m-ham-l","m-ham-r"], label:"Quads, Glutes, Hamstrings" },
+  tricep:  { front:[], back:["m-tricep-l","m-tricep-r"], label:"Triceps" },
+  calf:    { front:["m-calf-l","m-calf-r"], back:["m-calf-back-l","m-calf-back-r"], label:"Calves" },
+};
 
-  let streaming  = false;
-  let busy       = false;
-  let frameCount = 0;
-  let lastFps    = performance.now();
-  let prevReps   = 0;
+const YELLOW="#f5e642", YSTROKE="#e8d800";
+let exercises={}, currentEx="curl";
+let streaming=false, busy=false, frameCount=0, lastFpsT=performance.now();
+let prevReps=0, noPoseT=null, currentReps=0;
+let ctrState="idle"; // idle | running | stopped
+let savedSets=JSON.parse(localStorage.getItem("repai-sets")||"[]");
+let profile=JSON.parse(localStorage.getItem("repai-profile")||'{"totalReps":0,"totalSets":0,"activeDays":[],"prs":{},"workedThisWeek":[]}');
+let todayReps=0, todaySets=0, todayExs=new Set();
+let targetReps = 0;
+let mediaRecorder=null, recordedChunks=[], lastBlob=null;
 
-  async function toggleCamera() {
-    streaming ? stopCamera() : await startCamera();
-  }
+const webcam=document.getElementById("webcam");
+const outCanvas=document.getElementById("output-canvas");
+const capCanvas=document.getElementById("capture-canvas");
+const ctxOut=outCanvas.getContext("2d");
+const ctxCap=capCanvas.getContext("2d");
 
-  async function startCamera() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({
-        video: { width: { ideal: 1280 }, height: { ideal: 720 } },
-        audio: false
-      });
-      webcam.srcObject = stream;
-      await new Promise(r => webcam.onloadedmetadata = r);
+// ── INIT ──
+async function init() {
+  try { exercises=await(await fetch("/exercises")).json(); renderExGrid(); renderSwRow(); } catch(e){console.error(e);}
+  buildWeekStrip(); renderPRs(); renderSets(); updateMuscleMap(); updateProfileStats();
+  setCtrState("idle");
+}
 
-      outCanvas.width  = webcam.videoWidth;
-      outCanvas.height = webcam.videoHeight;
-      capCanvas.width  = webcam.videoWidth;
-      capCanvas.height = webcam.videoHeight;
-
-      streaming = true;
-      document.getElementById("placeholder").style.display = "none";
-      document.getElementById("dot").classList.add("active");
-      document.getElementById("status").textContent = "LIVE";
-      document.getElementById("cam-btn").textContent = "■ STOP CAMERA";
-
-      loop();
-    } catch(e) {
-      alert("Camera access denied or unavailable.");
-    }
-  }
-
-  function stopCamera() {
-    streaming = false;
-    webcam.srcObject?.getTracks().forEach(t => t.stop());
-    webcam.srcObject = null;
-    ctxOut.clearRect(0, 0, outCanvas.width, outCanvas.height);
-    document.getElementById("placeholder").style.display = "flex";
-    document.getElementById("dot").classList.remove("active");
-    document.getElementById("status").textContent = "OFFLINE";
-    document.getElementById("cam-btn").textContent = "▶ START CAMERA";
-  }
-
-  async function loop() {
-    if (!streaming) return;
-    if (!busy) {
-      busy = true;
-      const t0 = performance.now();
-
-      ctxCap.drawImage(webcam, 0, 0);
-      const b64 = capCanvas.toDataURL("image/jpeg", 0.5).split(",")[1];
-
-      try {
-        const res  = await fetch("/process", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ frame: b64 })
-        });
-        const data = await res.json();
-
-        // Draw annotated frame
-        const img = new Image();
-        img.onload = () => ctxOut.drawImage(img, 0, 0, outCanvas.width, outCanvas.height);
-        img.src = "data:image/jpeg;base64," + data.frame;
-
-        // Update UI
-        updateStats(data.count, data.stage, data.mode);
-
-        // FPS + latency
-        const lat = Math.round(performance.now() - t0);
-        document.getElementById("lat").textContent = lat;
-        frameCount++;
-        const now = performance.now();
-        if (now - lastFps >= 1000) {
-          document.getElementById("fps").textContent = frameCount;
-          frameCount = 0;
-          lastFps = now;
-        }
-      } catch(e) {
-        console.error(e);
-      }
-
-      busy = false;
-    }
-    requestAnimationFrame(loop);
-  }
-
-  function updateStats(count, stage, mode) {
-    const repEl = document.getElementById("rep-num");
-
-    // Pop animation on new rep
-    if (count !== prevReps) {
-      repEl.classList.add("pop");
-      setTimeout(() => repEl.classList.remove("pop"), 120);
-      prevReps = count;
-    }
-
-    repEl.textContent = count;
-    document.getElementById("stage-line").textContent = stage || "—";
-    document.getElementById("stage-pill").textContent = stage || "—";
-    document.getElementById("mode-footer").textContent = "MODE: " + mode.toUpperCase();
-  }
-
-  async function setExercise(mode) {
-    await fetch("/set_exercise", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ mode })
-    });
-    document.querySelectorAll(".ex-btn").forEach(b => {
-      b.classList.toggle("active", b.dataset.mode === mode);
-    });
-    prevReps = 0;
-  }
-
-  async function resetReps() {
-    await fetch("/reset", { method: "POST" });
-    prevReps = 0;
-    document.getElementById("rep-num").textContent = "0";
-    document.getElementById("stage-line").textContent = "—";
-  }
-
-  // Keyboard shortcuts
-  document.addEventListener("keydown", e => {
-    const map = { c: "curl", s: "squat", l: "lateral", p: "press" };
-    if (map[e.key]) setExercise(map[e.key]);
-    if (e.key === "q") stopCamera();
+// ── TABS ──
+const TABS={home:"screen-home",counter:"screen-counter",sets:"screen-sets",profile:"screen-profile"};
+function goTab(tab) {
+  Object.entries(TABS).forEach(([t,sid])=>{
+    document.getElementById(sid).classList.toggle("hidden",t!==tab);
+    document.getElementById("nav-"+t).classList.toggle("active",t===tab);
   });
+  if(tab==="sets") renderSets();
+  if(tab==="profile"){updateProfileStats();buildWeekStrip();renderPRs();updateMuscleMap();}
+}
+
+// ── HOME GRID ──
+function renderExGrid() {
+  const g=document.getElementById("ex-grid"); g.innerHTML="";
+  Object.entries(exercises).forEach(([id,ex])=>{
+    const c=document.createElement("div");
+    c.className="ex-card"+(id===currentEx?" selected":""); c.dataset.id=id;
+    c.innerHTML=`<div class="ex-emoji">${ex.icon}</div><div class="ex-name">${ex.name}</div>`;
+    c.onclick=()=>{currentEx=id;document.querySelectorAll(".ex-card").forEach(x=>x.classList.toggle("selected",x.dataset.id===id));};
+    g.appendChild(c);
+  });
+}
+
+function renderSwRow() {
+  const s=document.getElementById("sw-row"); s.innerHTML="";
+  Object.entries(exercises).forEach(([id,ex])=>{
+    const c=document.createElement("div");
+    c.className="sw-chip"+(id===currentEx?" active":""); c.dataset.id=id;
+    c.textContent=ex.icon+" "+ex.name; c.onclick=()=>switchEx(id); s.appendChild(c);
+  });
+}
+
+async function switchEx(id) {
+  currentEx=id;
+  document.querySelectorAll(".sw-chip").forEach(c=>c.classList.toggle("active",c.dataset.id===id));
+  document.getElementById("ctr-pill").textContent=exercises[id]?.name||id;
+  await fetch("/set_exercise",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:id})});
+  await fetch("/reset",{method:"POST"});
+  currentReps=0; prevReps=0; document.getElementById("rep-big").textContent="0";
+  if(ctrState==="running") restartRecording();
+}
+
+// ── BUTTON STATE MACHINE ──
+// idle    → [Start, Reset(disabled)]
+// running → [Stop, Reset]
+// stopped → [Save Set, New Set]
+function setCtrState(state) {
+  ctrState=state;
+  const btns=document.getElementById("ctr-btns");
+  if(state==="idle") {
+    const startFn = streaming ? "beginSet()" : "startCamera()";
+    btns.innerHTML=`
+      <button class="ctr-btn ctr-ghost" style="opacity:0.4" disabled>↺ Reset</button>
+      <button class="ctr-btn ctr-yellow" onclick="${startFn}">▶ Start</button>`;
+  } else if(state==="running") {
+    btns.innerHTML=`
+      <button class="ctr-btn ctr-ghost" onclick="resetSet()">↺ Reset</button>
+      <button class="ctr-btn ctr-red" onclick="stopSet()">■ Stop</button>`;
+  } else if(state==="stopped") {
+    btns.innerHTML=`
+      <button class="ctr-btn ctr-ghost" onclick="newSet()">+ New Set</button>
+      <button class="ctr-btn ctr-yellow" onclick="saveSet()">✓ Save Set</button>`;
+  }
+}
+
+// ── CAMERA ──
+async function startCamera() {
+  document.getElementById("cam-msg").textContent="Starting...";
+  try {
+    const stream=await navigator.mediaDevices.getUserMedia({video:{facingMode:{ideal:"user"},width:{ideal:640},height:{ideal:480}},audio:false});
+    webcam.srcObject=stream;
+    await new Promise(r=>webcam.onloadedmetadata=r); await webcam.play();
+    outCanvas.width=webcam.videoWidth; outCanvas.height=webcam.videoHeight;
+    capCanvas.width=webcam.videoWidth; capCanvas.height=webcam.videoHeight;
+    fitCanvas(); streaming=true;
+    document.getElementById("cam-ph").style.display="none";
+    document.getElementById("rep-overlay").style.display="block";
+    document.getElementById("live-badge").style.opacity="1";
+    document.getElementById("ctr-pill").textContent=exercises[currentEx]?.name||currentEx;
+    await fetch("/set_exercise",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({mode:currentEx})});
+    startRecording(stream);
+    setCtrState("running");
+    loop();
+  } catch(e) { document.getElementById("cam-msg").textContent="Camera denied"; }
+}
+
+function fitCanvas() {
+  const sw=window.innerWidth,sh=window.innerHeight,vw=outCanvas.width,vh=outCanvas.height,scale=Math.max(sw/vw,sh/vh);
+  outCanvas.style.cssText=`position:absolute;width:${vw*scale}px;height:${vh*scale}px;left:${(sw-vw*scale)/2}px;top:${(sh-vh*scale)/2}px;`;
+}
+
+// ── RECORDING ──
+function startRecording(stream) {
+  recordedChunks=[];
+  const cs=outCanvas.captureStream(15);
+  try{mediaRecorder=new MediaRecorder(cs,{mimeType:"video/webm;codecs=vp8"});}
+  catch(e){mediaRecorder=new MediaRecorder(cs);}
+  mediaRecorder.ondataavailable=e=>{if(e.data.size>0)recordedChunks.push(e.data);};
+  mediaRecorder.start(100);
+  document.getElementById("rec-ind").classList.add("show");
+}
+
+function stopRecording() {
+  return new Promise(resolve=>{
+    if(!mediaRecorder||mediaRecorder.state==="inactive"){resolve(null);return;}
+    mediaRecorder.onstop=()=>{
+      lastBlob=new Blob(recordedChunks,{type:"video/webm"});
+      document.getElementById("rec-ind").classList.remove("show");
+      resolve(lastBlob);
+    };
+    mediaRecorder.stop();
+  });
+}
+
+function restartRecording() {
+  if(!streaming||!webcam.srcObject)return;
+  if(mediaRecorder&&mediaRecorder.state!=="inactive")mediaRecorder.stop();
+  setTimeout(()=>{if(streaming)startRecording(webcam.srcObject);},200);
+}
+
+// ── LOOP ──
+async function loop() {
+  if(!streaming)return;
+  if(!busy){
+    busy=true; const t0=performance.now();
+    ctxCap.drawImage(webcam,0,0);
+    const b64=capCanvas.toDataURL("image/jpeg",0.55).split(",")[1];
+    try{
+      const data=await(await fetch("/process",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({frame:b64})})).json();
+      const img=new Image(); img.onload=()=>ctxOut.drawImage(img,0,0); img.src="data:image/jpeg;base64,"+data.frame;
+      updateCtrUI(data.count,data.stage,data.detected);
+      frameCount++; const now=performance.now();
+    }catch(e){console.error(e);}
+    busy=false;
+  }
+  requestAnimationFrame(loop);
+}
+
+function updateCtrUI(count,stage,detected) {
+  currentReps=count;
+  const el=document.getElementById("rep-big");
+  if(count!==prevReps){
+    el.classList.add("pop");
+    setTimeout(()=>el.classList.remove("pop"),140);
+    if(count===targetReps && targetReps>0){
+      // Goal buzz — long strong pattern
+      if(navigator.vibrate) navigator.vibrate([100,50,100,50,200]);
+      el.style.color="#f5e642";
+      setTimeout(()=>el.style.color="",600);
+    } else {
+      if(navigator.vibrate) navigator.vibrate(35);
+    }
+    prevReps=count;
+  }
+  el.textContent=count;
+  document.getElementById("stage-tag").textContent=stage||"Standby";
+  const w=document.getElementById("no-pose");
+  if(!detected||stage==="NO POSE"){w.classList.add("show");clearTimeout(noPoseT);noPoseT=setTimeout(()=>w.classList.remove("show"),2000);}
+  else w.classList.remove("show");
+}
+
+// ── SET ACTIONS ──
+async function startWorkout() { if(!streaming) { /* camera starts on tap */ } }
+
+async function stopSet() {
+  await stopRecording();
+  setCtrState("stopped");
+}
+
+async function resetSet() {
+  currentReps=0; prevReps=0;
+  document.getElementById("rep-big").textContent="0";
+  await fetch("/reset",{method:"POST"});
+  restartRecording();
+}
+
+async function newSet() {
+  currentReps=0; prevReps=0;
+  document.getElementById("rep-big").textContent="0";
+  await fetch("/reset",{method:"POST"});
+  lastBlob=null;
+  setCtrState("idle");
+}
+
+function beginSet() {
+  startRecording(webcam.srcObject);
+  setCtrState("running");
+}
+
+function updateTarget(val) {
+  targetReps = parseInt(val) || 10;
+}
+
+async function saveSet() {
+  if(currentReps===0){alert("No reps recorded!");return;}
+  const videoUrl=lastBlob?URL.createObjectURL(lastBlob):null;
+  const exName=exercises[currentEx]?.name||currentEx;
+  const setData={id:Date.now(),exId:currentEx,exercise:exName,reps:currentReps,ts:Date.now(),videoUrl,feedback:null};
+  savedSets.unshift(setData);
+  if(savedSets.length>30)savedSets=savedSets.slice(0,30);
+
+  todayReps+=currentReps; todaySets++; todayExs.add(exName);
+  document.getElementById("h-reps").textContent=todayReps;
+  document.getElementById("h-sets").textContent=todaySets;
+  document.getElementById("h-exs").textContent=todayExs.size;
+
+  profile.totalReps+=currentReps; profile.totalSets++;
+  const today=new Date().toDateString();
+  if(!profile.activeDays.includes(today))profile.activeDays.push(today);
+  if(!profile.prs[currentEx]||currentReps>profile.prs[currentEx])profile.prs[currentEx]=currentReps;
+  if(!profile.workedThisWeek)profile.workedThisWeek=[];
+  if(!profile.workedThisWeek.includes(currentEx))profile.workedThisWeek.push(currentEx);
+  saveProfile();
+
+  generateFeedback(setData);
+
+  // Reset for next set
+  currentReps=0; prevReps=0;
+  document.getElementById("rep-big").textContent="0";
+  await fetch("/reset",{method:"POST"});
+  lastBlob=null;
+  startRecording(webcam.srcObject);
+  setCtrState("running");
+  goTab("sets");
+}
+
+// ── SETS TAB ──
+function renderSets() {
+  const c=document.getElementById("sets-container");
+  if(!savedSets.length){
+    c.innerHTML=`<div class="sets-empty"><span style="font-size:2.5rem">📹</span><span>No sets yet.<br/>Finish a workout to see your replays here.</span></div>`;
+    return;
+  }
+  c.innerHTML="";
+  savedSets.forEach((s,i)=>{
+    const time=new Date(s.ts).toLocaleTimeString("en-CA",{hour:"2-digit",minute:"2-digit"});
+    const date=new Date(s.ts).toLocaleDateString("en-CA",{month:"short",day:"numeric"});
+    const div=document.createElement("div"); div.className="set-card";
+    div.innerHTML=`
+      <div class="set-card-top" onclick="toggleSet(${i})">
+        <div><div class="set-ex">${s.exercise}</div><div class="set-meta-txt">${date} · ${time}</div></div>
+        <div style="display:flex;align-items:center;gap:10px">
+          <div class="set-reps-big">${s.reps}</div>
+          <div style="font-size:0.75rem;color:var(--muted)">▶</div>
+        </div>
+      </div>
+      <div class="set-expand" id="exp-${i}">
+        ${s.videoUrl?`<video class="set-video" src="${s.videoUrl}" controls playsinline></video>`:`<div style="padding:1.5rem;text-align:center;color:#555;font-size:0.75rem;font-weight:700;background:#111">No recording</div>`}
+        <div class="set-feedback-box ${s.feedback?'ready':''}" id="fb-${i}">
+          ${s.feedback?s.feedback:`<div class="dot-row"><div class="dp"></div><div class="dp"></div><div class="dp"></div></div>`}
+        </div>
+      </div>`;
+    c.appendChild(div);
+  });
+}
+
+function toggleSet(i) {
+  const exp=document.getElementById("exp-"+i); const isOpen=exp.classList.toggle("open");
+  const vid=exp.querySelector("video");
+  if(vid){if(isOpen)vid.play();else{vid.pause();vid.currentTime=0;}}
+}
+
+async function generateFeedback(setData) {
+  const idx=savedSets.findIndex(s=>s.id===setData.id);
+  try{
+    const res=await fetch("https://api.anthropic.com/v1/messages",{
+      method:"POST",headers:{"Content-Type":"application/json"},
+      body:JSON.stringify({model:"claude-sonnet-4-20250514",max_tokens:1000,
+        system:"You are a personal trainer. Give brief, encouraging feedback on a single set in 1-2 sentences. Be specific and warm. No markdown.",
+        messages:[{role:"user",content:`Exercise: ${setData.exercise}. Reps: ${setData.reps}. Give feedback.`}]})
+    });
+    const data=await res.json();
+    const text=data.content?.find(b=>b.type==="text")?.text||"Great effort on that set!";
+    if(idx>=0)savedSets[idx].feedback=text;
+    const el=document.getElementById("fb-"+idx);
+    if(el){el.className="set-feedback-box ready";el.textContent=text;}
+  }catch(e){
+    const fb=`Solid set — ${setData.reps} reps of ${setData.exercise}. Keep it up!`;
+    if(idx>=0)savedSets[idx].feedback=fb;
+    const el=document.getElementById("fb-"+idx);
+    if(el){el.className="set-feedback-box ready";el.textContent=fb;}
+  }
+}
+
+// ── PROFILE ──
+function saveProfile(){localStorage.setItem("repai-profile",JSON.stringify(profile));}
+
+function updateProfileStats() {
+  document.getElementById("p-reps").textContent=profile.totalReps;
+  document.getElementById("p-sets").textContent=profile.totalSets;
+  document.getElementById("p-days").textContent=profile.activeDays.length;
+  document.getElementById("p-streak").textContent=calcStreak();
+  if(profile.activeDays.length>0){
+    const first=new Date(Math.min(...profile.activeDays.map(d=>new Date(d))));
+    document.getElementById("p-since").textContent="Active since "+first.toLocaleDateString("en-CA",{month:"short",year:"numeric"});
+  }
+}
+
+function calcStreak(){
+  if(!profile.activeDays.length)return 0;
+  const days=[...new Set(profile.activeDays)].map(d=>new Date(d).getTime()).sort();
+  let best=1,cur=1;
+  for(let i=1;i<days.length;i++){if((days[i]-days[i-1])===86400000){cur++;best=Math.max(best,cur);}else cur=1;}
+  return best;
+}
+
+function buildWeekStrip(){
+  const c=document.getElementById("week-days"); c.innerHTML="";
+  const today=new Date();
+  for(let i=6;i>=0;i--){
+    const d=new Date(today); d.setDate(d.getDate()-i);
+    const label=["Su","Mo","Tu","We","Th","Fr","Sa"][d.getDay()];
+    const done=profile.activeDays.includes(d.toDateString());
+    const isToday=i===0;
+    const pip=document.createElement("div");
+    pip.className="wday"+(done?" done":isToday?" today":"");
+    pip.textContent=label; c.appendChild(pip);
+  }
+}
+
+function renderPRs(){
+  const c=document.getElementById("pr-list");
+  const entries=Object.entries(profile.prs);
+  if(!entries.length){c.innerHTML=`<div style="color:var(--muted);font-size:0.8rem;font-weight:700;text-align:center;padding:1rem">Complete sets to see your PRs</div>`;return;}
+  c.innerHTML=entries.map(([id,reps])=>`
+    <div class="pr-card">
+      <div class="pr-name">${exercises[id]?.icon||"💪"} ${exercises[id]?.name||id}</div>
+      <div class="pr-val">${reps} reps</div>
+    </div>`).join("");
+}
+
+// ── MUSCLE MAP ──
+function updateMuscleMap(){
+  document.querySelectorAll(".muscle-body").forEach(el=>{el.setAttribute("fill","#e0ddd6");el.setAttribute("stroke","#ccc");});
+  const worked=profile.workedThisWeek||[];
+  const ids=new Set(), labels=new Set();
+  worked.forEach(exId=>{const m=EX_MUSCLES[exId];if(!m)return;[...m.front,...m.back].forEach(id=>ids.add(id));m.label.split(", ").forEach(l=>labels.add(l));});
+  ids.forEach(id=>{const el=document.getElementById(id);if(el){el.setAttribute("fill",YELLOW);el.setAttribute("stroke",YSTROKE);}});
+  const leg=document.getElementById("muscle-legend");
+  leg.innerHTML=labels.size?[...labels].map(l=>`<div class="muscle-tag worked">${l}</div>`).join(""):`<div class="muscle-tag">No workouts yet this week</div>`;
+}
+
+window.addEventListener("resize",()=>{if(streaming)fitCanvas();});
+init();
 </script>
 </body>
 </html>
-```
-
----
-
-## `requirements.txt`
-```
-flask
-flask-cors
-ultralytics
-opencv-python
-numpy
